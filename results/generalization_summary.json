@@ -1,9 +1,9 @@
 {
   "acc_raw_same": 1.0,
   "acc_inv_same": 0.9487179487179487,
-  "acc_raw_cross": 0.2988691437802908,
-  "acc_inv_cross": 0.5718901453957996,
-  "raw_drop_pct": 70.11308562197091,
-  "inv_drop_pct": 37.682780332214904,
-  "inv_advantage_pct": 27.302100161550886
+  "acc_raw_cross": 0.43323076923076925,
+  "acc_inv_cross": 0.4473846153846154,
+  "raw_drop_pct": 56.67692307692307,
+  "inv_drop_pct": 50.13333333333333,
+  "inv_advantage_pct": 1.4153846153846128
 }
