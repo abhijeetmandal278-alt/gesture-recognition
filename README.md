@@ -193,13 +193,12 @@ The invariant features model is expected to show a smaller accuracy drop under s
 
 ### Screenshots / GIF
 
-*(Add screenshots or GIF of the live overlay here after running the demo)*
+![Live Demo Screenshot](./assets/demo.png)
 
-```
-[placeholder — capture a screenshot or GIF from live_demo.py]
-```
+### Demo Video
 
----
+📹 **[Watch the Full Real-Time Demo](PASTE_YOUR_VIDEO_LINK_HERE)**
+
 
 ## Technical Details
 

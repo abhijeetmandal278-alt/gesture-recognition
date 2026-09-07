@@ -1,0 +1,13 @@
+{
+  "session_id": 2,
+  "timestamp": "20260908_015918",
+  "note": "describe exactly what you changed here",
+  "gesture_classes": [
+    "open_palm",
+    "fist",
+    "thumbs_up",
+    "peace_sign",
+    "pointing"
+  ],
+  "record_duration_s": 5.0
+}
