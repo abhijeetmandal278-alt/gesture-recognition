@@ -1,0 +1,16 @@
+{
+  "train_session": 1,
+  "random_state": 42,
+  "test_size": 0.2,
+  "classes": [
+    "fist",
+    "open_palm",
+    "peace_sign",
+    "pointing",
+    "thumbs_up"
+  ],
+  "n_train": 466,
+  "n_test": 117,
+  "same_session_acc_raw": 1.0,
+  "same_session_acc_inv": 0.9487179487179487
+}
