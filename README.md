@@ -41,6 +41,7 @@ gesture-recognition/
 ├── results/
 │   ├── generalization_table.csv
 │   └── latency_benchmark.csv
+├── screenshots/                # Live demo and results screenshots
 ├── requirements.txt
 └── README.md
 ```
@@ -71,10 +72,10 @@ pip install -r requirements.txt
 
 ```bash
 # Step 1: Collect training data (Session 1)
-python src/collect_data.py --session 1 --note "Normal lighting, 50cm, right hand"
+python src/collect_data.py --session 1 --note "Normal lighting, ~40cm from laptop, sitting at desk"
 
 # Step 2: Collect independent test data (Session 2) — different conditions!
-python src/collect_data.py --session 2 --note "Dim lighting, 30cm, left hand"
+python src/collect_data.py --session 2 --note "Different lighting / distance / angle from Session 1"
 
 # Step 3: Train both models on Session 1
 python src/train.py --session 1
@@ -136,18 +137,26 @@ Each finger vector points from the MCP joint to the fingertip. Angles are inhere
 
 > **⚠️ Critical:** Collecting data under only one condition does not test generalization.
 
-**Session 1 (training)** — collect under normal, comfortable conditions:
+**Session 1 (training)** — 583 samples, collected under normal conditions:
 - Normal room lighting
-- ~50 cm from camera
-- Your dominant hand
+- ~40 cm from camera
+- Sitting at desk
 
-**Session 2 (independent test)** — collect under **deliberately different** conditions:
-- Different lighting (brighter, dimmer, different direction)
-- Different distance from camera
-- Different hand angle / orientation
-- Optionally a different person's hand
+**Session 2 (independent test)** — 619 samples, collected under **deliberately different** conditions:
+- Changed lighting, distance from camera, and/or angle relative to Session 1
 
-Session 2 data is **never** used for training — it exists solely to measure how well each model generalizes beyond training conditions.
+Session 2 data was **never** used for training — it exists solely to measure how well each model generalizes beyond training conditions.
+
+**Per-class sample counts:**
+
+| Class | Session 1 (train) | Session 2 (test) |
+|---|---|---|
+| open_palm | 107 | 134 |
+| fist | 126 | 120 |
+| thumbs_up | 127 | 118 |
+| peace_sign | 73 | 122 |
+| pointing | 150 | 125 |
+| **Total** | **583** | **619** |
 
 ---
 
@@ -155,50 +164,60 @@ Session 2 data is **never** used for training — it exists solely to measure ho
 
 ### Generalization Table
 
-*(This table is populated after running `evaluate.py` — replace placeholder values with your actual results)*
-
 |                    | Same-Session Test | Cross-Session Test |
 | ------------------ | :---------------: | :----------------: |
-| Raw Coordinates    |     XX.XX%        |      XX.XX%        |
-| Invariant Features |     XX.XX%        |      XX.XX%        |
+| Raw Coordinates    |     **100.00%**   |      **29.89%**    |
+| Invariant Features |     **94.87%**    |      **57.19%**    |
 
-**Interpretation:** *(to be written after running the evaluation)*
+![Generalization Table](screenshots/generalization_table.png)
 
-The invariant features model is expected to show a smaller accuracy drop under session shift because its features are normalized for hand size, position, and scale — all of which change between sessions. The raw coordinates model overfits to the specific pixel-space statistics of the training session.
+**Interpretation:**
+
+- Raw coordinates dropped from 100.0% same-session to 29.9% cross-session — a **70.1 percentage-point collapse**, falling to barely above the 5-class random baseline of ~20%.
+- Invariant features dropped from 94.9% same-session to 57.2% cross-session — a much smaller **37.7 percentage-point drop**.
+- **Invariant features generalized 27.3 percentage points better than raw coordinates** under a genuine session shift.
+
+The raw-coordinate model's apparent "perfect" same-session score was misleading — it had learned incidental details of that one session's camera distance and hand positioning rather than the actual gesture shapes, so its accuracy nearly collapsed once evaluated on Session 2's different conditions. The invariant-feature model started with a slightly lower same-session score but held up far better under real session variation, confirming that normalizing distances by hand scale and using rotation/translation-invariant angles captures the gesture itself rather than incidental camera setup.
 
 ### Latency / FPS Benchmark
 
-*(Populated after running `benchmark.py`)*
+Two independent benchmark runs were recorded to check consistency:
 
-| Stage               | Latency (ms/frame) |
-| ------------------- | :-----------------: |
-| Webcam capture      |       X.XXX         |
-| MediaPipe detection |       X.XXX         |
-| Feature extraction  |       X.XXX         |
-| Classification      |       X.XXX         |
-| Overlay rendering   |       X.XXX         |
-| **Full pipeline FPS** |     **XX.X**      |
+**Classifier-only inference latency** (single-sample `predict()` call, averaged over 100 calls):
 
-**Bottleneck:** MediaPipe detection is expected to be the dominant cost, as it runs a neural network per frame. Classification (Random Forest) and feature extraction are negligible in comparison.
+| Model | Run 1 | Run 2 |
+|---|:---:|:---:|
+| Raw-coordinate classifier (63 features) | 29.084 ± 4.984 ms | 30.660 ± 2.227 ms |
+| Invariant-feature classifier (8 features) | 28.892 ± 5.154 ms | 30.718 ± 2.155 ms |
+
+**Full pipeline, per-stage breakdown** (live webcam, 200 frames):
+
+| Stage | Run 1 | Run 2 |
+| ------------------- | :---: | :---: |
+| Webcam capture      | 6.887 ms | 6.906 ms |
+| MediaPipe detection | 19.886 ms | 20.658 ms ← bottleneck |
+| Feature extraction  | 0.128 ms | 0.090 ms |
+| Classification      | 23.991 ms ← bottleneck | 15.327 ms |
+| Overlay rendering   | 0.062 ms | 0.040 ms |
+| **Full pipeline FPS** | **15.3** | **18.0** |
+
+![Benchmark Results](screenshots/benchmark_results.png)
+
+**Bottleneck analysis:** The bottleneck stage actually changed between the two runs — MediaPipe's neural-network-based hand detection and the Random Forest classification step turned out to be comparably expensive (roughly 15–24 ms each), rather than one clearly dominating as initially expected. Feature extraction is essentially free (under 0.15 ms) in both runs, confirming the 8-feature geometric computation adds negligible overhead compared to the raw pass-through. Classifier latency (~29–31 ms) is higher than a Random Forest's raw compute would suggest — most of that is scikit-learn's per-call Python/array-conversion overhead rather than actual model computation.
 
 ---
 
-## Recording a Demo Video
+## Live Demo
 
-1. Run `python src/live_demo.py`
-2. Use a screen recording tool (e.g. OBS Studio, Windows Game Bar `Win+G`, or macOS QuickTime)
-3. Demonstrate each gesture class with smooth transitions
-4. Show the FPS counter, bounding box, and confidence score in action
-5. Save the recording and optionally convert to GIF
+The live demo automatically selects whichever model achieved the higher cross-session accuracy in `results/generalization_summary.json` — in this project, that's the **invariant-features model** (57.2% vs. 29.9%).
 
-### Screenshots / GIF
-
-![Live Demo Screenshot](./assets/demo.png)
+![Live Demo](screenshots/live_demo.png)
 
 ### Demo Video
 
-📹 **[Watch the Full Real-Time Demo](PASTE_YOUR_VIDEO_LINK_HERE)**
+📹 **[Watch the Full Real-Time Demo](https://drive.google.com/file/d/1wCcpNjM6Wg5KUs-4nvpv_IGSr3LKESDE/view?usp=sharing)**
 
+---
 
 ## Technical Details
 
@@ -211,7 +230,7 @@ The invariant features model is expected to show a smaller accuracy drop under s
 
 | Package        | Version   |
 | -------------- | --------- |
-| opencv-python  | 4.10.0.84 |
+| opencv-contrib-python | 4.11.0.86 |
 | mediapipe      | 0.10.14   |
 | scikit-learn   | 1.5.1     |
 | numpy          | 1.26.4    |

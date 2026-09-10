@@ -1,10 +1,10 @@
 Metric,Value,StdDev,Iterations
-Classifier latency — Raw (ms),30.660,2.227,100
-Classifier latency — Invariant (ms),30.718,2.155,100
-Full pipeline FPS,18.0,,200
-Bottleneck: MediaPipe detection,20.658 ms,,
-Webcam capture (ms/frame),6.906,,
-MediaPipe detection (ms/frame),20.658,,
-Feature extraction (ms/frame),0.090,,
-Classification (ms/frame),15.327,,
-Overlay rendering (ms/frame),0.040,,
+Classifier latency — Raw (ms),30.277,3.324,100
+Classifier latency — Invariant (ms),30.759,1.568,100
+Full pipeline FPS,17.5,,200
+Bottleneck: MediaPipe detection,19.824 ms,,
+Webcam capture (ms/frame),7.904,,
+MediaPipe detection (ms/frame),19.824,,
+Feature extraction (ms/frame),0.076,,
+Classification (ms/frame),13.971,,
+Overlay rendering (ms/frame),0.052,,
